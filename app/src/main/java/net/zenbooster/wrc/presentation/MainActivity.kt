@@ -12,8 +12,11 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.os.Bundle
 import android.content.Context
+import android.content.Context.POWER_SERVICE
+import android.content.Context.VIBRATOR_SERVICE
 import android.content.Intent
 import android.os.CountDownTimer
+import android.os.PowerManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -40,8 +43,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,14 +70,20 @@ import java.util.Date
 import kotlin.math.ceil
 import kotlin.math.round
 import kotlin.time.Duration
+import android.os.Vibrator
+import android.os.VibrationEffect;
+import androidx.core.content.ContextCompat.getSystemService
 
 class Core {
     companion object {
         var btnEnabled = mutableStateOf(false)
         var btnChecked = mutableStateOf(false)
-        //var mysvcIntent: Intent = Intent()
         var timer: CountDownTimer? = null;
         var s_time = mutableStateOf("00:00:00")
+        val def_timer_color = Color.Green
+        var VibrationLevel = mutableStateOf(255f)
+        var VibrationDuration = mutableStateOf(375f)
+        var wakeLock: PowerManager.WakeLock? = null
 
         fun init(ctx : Context?) {
             if(ctx != null) {
@@ -94,6 +105,15 @@ class MainActivity : ComponentActivity() {
             WearApp(this)
         }
     }
+
+    override fun onPause() {
+        Core.wakeLock?.release()
+        super.onPause()
+    }
+    override fun onDestroy() {
+        //Core.wakeLock?.release()
+        super.onDestroy()
+    }
 }
 
 @Composable
@@ -114,17 +134,12 @@ fun WearApp(ctx: Context?) {
             val pickerStateH = rememberPickerState(initialNumberOfOptions = 24)
             val pickerStateM = rememberPickerState(initialNumberOfOptions = 60)
             val pickerStateS = rememberPickerState(initialNumberOfOptions = 60)
-            /*val pickerStates = remember {
-                mutableStateListOf(
-                    pickerStateH.selectedOption,
-                    pickerStateM.selectedOption,
-                    pickerStateS.selectedOption
-                )
-            }*/
 
             val btcap = listOf("▶", "❚❚")
             val btnEnabled : MutableState<Boolean> = Core.btnEnabled
             val btnChecked : MutableState<Boolean> = Core.btnChecked
+
+            val timer_color = remember {mutableStateOf(Core.def_timer_color)}
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -173,7 +188,11 @@ fun WearApp(ctx: Context?) {
 
                         }
                     } else {
-                        Text(Core.s_time.value)
+                        Text(
+                            text = Core.s_time.value,
+                            fontWeight = FontWeight.Bold,
+                            color = timer_color.value
+                        )
                     }
                 }
 
@@ -181,6 +200,12 @@ fun WearApp(ctx: Context?) {
                     enabled = btnEnabled.value,
                     onClick = {
                         fun StartMainWork() {
+                            Core.wakeLock = (ctx?.getSystemService(POWER_SERVICE) as PowerManager).run {
+                                newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "phasig::MyWakelockTag").apply {
+                                    acquire()
+                                }
+                            }
+
                             val totalSeconds:Long = pickerStateS.selectedOption +
                                     pickerStateM.selectedOption * 60L +
                                     pickerStateH.selectedOption * 3600L;
@@ -188,6 +213,25 @@ fun WearApp(ctx: Context?) {
                             Core.timer = object : CountDownTimer(totalSeconds * 1000, 1000) {
                                 override fun onTick(millisRemaining: Long) {
                                     val sec = round(millisRemaining / 1000.0).toInt()
+
+                                    if (sec == 1)
+                                    {
+                                        timer_color.value = Color.Red
+
+                                        val vibrator = ctx?.getSystemService(VIBRATOR_SERVICE) as Vibrator
+                                        val vibrationEffect1: VibrationEffect
+                                        vibrationEffect1 =
+                                            VibrationEffect.createOneShot(Core.VibrationDuration.value.toLong(), Core.VibrationLevel.value.toInt())
+
+                                        // it is safe to cancel other vibrations currently taking place
+                                        vibrator.cancel()
+                                        vibrator.vibrate(vibrationEffect1)
+                                    }
+                                    else
+                                    {
+                                        timer_color.value = Core.def_timer_color
+                                    }
+
                                     val hours = sec / 3600 // Получение часов
                                     val minutes = (sec / 60) % 60 // Получение минут
                                     val seconds = sec % 60 // Получение секунд
@@ -206,6 +250,8 @@ fun WearApp(ctx: Context?) {
                         fun StopMainWork() {
                             Core.timer?.cancel()
                             Core.timer = null
+                            Core.wakeLock!!.release()
+                            Core.wakeLock = null
                         }
 
                         if(btnChecked.value)
