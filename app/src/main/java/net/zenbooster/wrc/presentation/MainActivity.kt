@@ -6,8 +6,14 @@
 
 package net.zenbooster.wrc.presentation
 
+import android.app.ActivityManager
+import android.app.AlarmManager
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.os.Bundle
 import android.content.Context
+import android.content.Intent
+import android.os.CountDownTimer
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -26,8 +32,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
@@ -42,16 +52,33 @@ import androidx.wear.compose.material.Card
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.PickerGroup
 import androidx.wear.compose.material.PickerGroupItem
+import androidx.wear.compose.material.PickerState
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
 import androidx.wear.compose.material.rememberPickerGroupState
 import androidx.wear.compose.material.rememberPickerState
 import net.zenbooster.wrc.R
 import net.zenbooster.wrc.presentation.theme.WrcTheme
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Date
+import kotlin.math.ceil
+import kotlin.math.round
+import kotlin.time.Duration
 
 class Core {
     companion object {
+        var btnEnabled = mutableStateOf(false)
         var btnChecked = mutableStateOf(false)
+        //var mysvcIntent: Intent = Intent()
+        var timer: CountDownTimer? = null;
+        var s_time = mutableStateOf("00:00:00")
+
+        fun init(ctx : Context?) {
+            if(ctx != null) {
+                //mysvcIntent.setClass(ctx, MyService::class.java)
+            }
+        }
     }
 }
 
@@ -71,6 +98,9 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun WearApp(ctx: Context?) {
+
+    Core.init(ctx)
+
     WrcTheme {
         Box(
             modifier = Modifier
@@ -81,18 +111,28 @@ fun WearApp(ctx: Context?) {
             TimeText()
 
             val pickerGroupState = rememberPickerGroupState()
-            val pickerStateHour = rememberPickerState(initialNumberOfOptions = 24)
-            val pickerStateMinute = rememberPickerState(initialNumberOfOptions = 60)
-            val pickerStateSeconds = rememberPickerState(initialNumberOfOptions = 60)
+            val pickerStateH = rememberPickerState(initialNumberOfOptions = 24)
+            val pickerStateM = rememberPickerState(initialNumberOfOptions = 60)
+            val pickerStateS = rememberPickerState(initialNumberOfOptions = 60)
+            /*val pickerStates = remember {
+                mutableStateListOf(
+                    pickerStateH.selectedOption,
+                    pickerStateM.selectedOption,
+                    pickerStateS.selectedOption
+                )
+            }*/
 
             val btcap = listOf("▶", "❚❚")
+            val btnEnabled : MutableState<Boolean> = Core.btnEnabled
             val btnChecked : MutableState<Boolean> = Core.btnChecked
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Column(
-                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -104,33 +144,82 @@ fun WearApp(ctx: Context?) {
 
                         PickerGroup(
                             PickerGroupItem(
-                                pickerState = pickerStateHour,
+                                pickerState = pickerStateH,
                                 option = { optionIndex, _ -> Text(text = "%02d".format(optionIndex)) },
                                 modifier = Modifier.size(40.dp, 100.dp)
                             ),
                             PickerGroupItem(
-                                pickerState = pickerStateMinute,
+                                pickerState = pickerStateM,
                                 option = { optionIndex, _ -> Text(text = "%02d".format(optionIndex)) },
                                 modifier = Modifier.size(40.dp, 100.dp)
                             ),
                             PickerGroupItem(
-                                pickerState = pickerStateSeconds,
+                                pickerState = pickerStateS,
                                 option = { optionIndex, _ -> Text(text = "%02d".format(optionIndex)) },
                                 modifier = Modifier.size(40.dp, 100.dp)
                             ),
                             pickerGroupState = pickerGroupState,
                             autoCenter = false
                         )
+
+                        LaunchedEffect(
+                            pickerStateH.selectedOption,
+                            pickerStateM.selectedOption,
+                            pickerStateS.selectedOption
+                        ) {
+                            btnEnabled.value = pickerStateH.selectedOption > 0 ||
+                                    pickerStateM.selectedOption > 0 ||
+                                    pickerStateS.selectedOption > 0
+
+                        }
                     } else {
-                        Text("00:00:00")
+                        Text(Core.s_time.value)
                     }
                 }
 
                 Button(
-                    enabled = true,
-                    //shape = RoundedCornerShape(size = 5.dp),
+                    enabled = btnEnabled.value,
                     onClick = {
-                        btnChecked.value = !btnChecked.value
+                        fun StartMainWork() {
+                            val totalSeconds:Long = pickerStateS.selectedOption +
+                                    pickerStateM.selectedOption * 60L +
+                                    pickerStateH.selectedOption * 3600L;
+
+                            Core.timer = object : CountDownTimer(totalSeconds * 1000, 1000) {
+                                override fun onTick(millisRemaining: Long) {
+                                    val sec = round(millisRemaining / 1000.0).toInt()
+                                    val hours = sec / 3600 // Получение часов
+                                    val minutes = (sec / 60) % 60 // Получение минут
+                                    val seconds = sec % 60 // Получение секунд
+
+                                    // Создаем LocalTime из частей
+                                    val time = LocalTime.of(hours, minutes, seconds)
+                                    Core.s_time.value = time.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                                }
+
+                                override fun onFinish() {
+                                    start()
+                                }
+                            }.start()
+                        }
+
+                        fun StopMainWork() {
+                            Core.timer?.cancel()
+                            Core.timer = null
+                        }
+
+                        if(btnChecked.value)
+                        { // stop
+                            StopMainWork();
+
+                            btnChecked.value = false;
+                        }
+                        else
+                        { // start
+                            StartMainWork();
+
+                            btnChecked.value = true;
+                        }
                     },
                     modifier = Modifier
                         .padding(top = 1.dp, bottom = 5.dp)
