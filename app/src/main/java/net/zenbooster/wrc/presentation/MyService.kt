@@ -23,6 +23,7 @@ import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.os.CountDownTimer
 import android.os.PowerManager
+import android.os.VibrationEffect.EFFECT_HEAVY_CLICK
 import net.zenbooster.wrc.R
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -106,16 +107,34 @@ class MyService : Service() {
 
                 if (sec == 1)
                 {
+                    /*fun createLongArray(n: Int, value: Long): LongArray {
+                        return LongArray(n) { value }
+                    }
+                    fun createIntArray(n: Int, value: Int): IntArray {
+                        return IntArray(n) { value }
+                    }
+                    fun createIntArray(n: Int, fillArray: IntArray): IntArray {
+                        return List(n) { fillArray.asList() }.flatten().toIntArray()
+                    }
+                    fun createLongArray(n: Int, fillArray: LongArray): LongArray {
+                        return List(n) { fillArray.asList() }.flatten().toLongArray()
+                    }
+                    */
                     Core.timerColor.value = androidx.compose.ui.graphics.Color.Red
 
                     val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
-                    val vibrationEffect1: VibrationEffect
-                    vibrationEffect1 =
+                    val vibrationEffect: VibrationEffect
+
+                    vibrationEffect =
                         VibrationEffect.createOneShot(Core.VibrationDuration.value.toLong(), Core.VibrationLevel.value.toInt())
+                        /*VibrationEffect.createWaveform(
+                            longArrayOf(100, 50, 100, 50, 200, 100, 200),
+                            intArrayOf(255, 0, 255, 0, 255, 0, 255),-1)
+                        */
 
                     // it is safe to cancel other vibrations currently taking place
                     vibrator.cancel()
-                    vibrator.vibrate(vibrationEffect1)
+                    vibrator.vibrate(vibrationEffect)
                 }
                 else
                 {

@@ -72,6 +72,9 @@ import kotlin.math.round
 import kotlin.time.Duration
 import android.os.Vibrator
 import android.os.VibrationEffect;
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.getSystemService
 
 class Core {
@@ -82,7 +85,7 @@ class Core {
         var s_time = mutableStateOf("00:00:00")
         val def_timerColor = Color.Green
         var VibrationLevel = mutableStateOf(255f)
-        var VibrationDuration = mutableStateOf(375f)
+        var VibrationDuration = mutableStateOf(750f)
         var timerColor = mutableStateOf(Core.def_timerColor)
 
         var totalSeconds:Long = 0;
@@ -191,6 +194,7 @@ fun WearApp(ctx: Context?) {
                         Text(
                             text = Core.s_time.value,
                             fontWeight = FontWeight.Bold,
+                            fontSize = 32.sp,
                             color = timerColor.value
                         )
                     }
