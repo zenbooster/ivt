@@ -80,14 +80,17 @@ class Core {
         var btnChecked = mutableStateOf(false)
         var timer: CountDownTimer? = null;
         var s_time = mutableStateOf("00:00:00")
-        val def_timer_color = Color.Green
+        val def_timerColor = Color.Green
         var VibrationLevel = mutableStateOf(255f)
         var VibrationDuration = mutableStateOf(375f)
-        var wakeLock: PowerManager.WakeLock? = null
+        var timerColor = mutableStateOf(Core.def_timerColor)
+
+        var totalSeconds:Long = 0;
+        var mysvcIntent: Intent = Intent()
 
         fun init(ctx : Context?) {
             if(ctx != null) {
-                //mysvcIntent.setClass(ctx, MyService::class.java)
+                mysvcIntent.setClass(ctx, MyService::class.java)
             }
         }
     }
@@ -107,11 +110,9 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onPause() {
-        Core.wakeLock?.release()
         super.onPause()
     }
     override fun onDestroy() {
-        //Core.wakeLock?.release()
         super.onDestroy()
     }
 }
@@ -138,8 +139,7 @@ fun WearApp(ctx: Context?) {
             val btcap = listOf("▶", "❚❚")
             val btnEnabled : MutableState<Boolean> = Core.btnEnabled
             val btnChecked : MutableState<Boolean> = Core.btnChecked
-
-            val timer_color = remember {mutableStateOf(Core.def_timer_color)}
+            val timerColor : MutableState<Color> = Core.timerColor
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -191,7 +191,7 @@ fun WearApp(ctx: Context?) {
                         Text(
                             text = Core.s_time.value,
                             fontWeight = FontWeight.Bold,
-                            color = timer_color.value
+                            color = timerColor.value
                         )
                     }
                 }
@@ -200,58 +200,17 @@ fun WearApp(ctx: Context?) {
                     enabled = btnEnabled.value,
                     onClick = {
                         fun StartMainWork() {
-                            Core.wakeLock = (ctx?.getSystemService(POWER_SERVICE) as PowerManager).run {
-                                newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "phasig::MyWakelockTag").apply {
-                                    acquire()
-                                }
-                            }
-
-                            val totalSeconds:Long = pickerStateS.selectedOption +
+                            Core.totalSeconds = pickerStateS.selectedOption +
                                     pickerStateM.selectedOption * 60L +
                                     pickerStateH.selectedOption * 3600L;
 
-                            Core.timer = object : CountDownTimer(totalSeconds * 1000, 1000) {
-                                override fun onTick(millisRemaining: Long) {
-                                    val sec = round(millisRemaining / 1000.0).toInt()
-
-                                    if (sec == 1)
-                                    {
-                                        timer_color.value = Color.Red
-
-                                        val vibrator = ctx?.getSystemService(VIBRATOR_SERVICE) as Vibrator
-                                        val vibrationEffect1: VibrationEffect
-                                        vibrationEffect1 =
-                                            VibrationEffect.createOneShot(Core.VibrationDuration.value.toLong(), Core.VibrationLevel.value.toInt())
-
-                                        // it is safe to cancel other vibrations currently taking place
-                                        vibrator.cancel()
-                                        vibrator.vibrate(vibrationEffect1)
-                                    }
-                                    else
-                                    {
-                                        timer_color.value = Core.def_timer_color
-                                    }
-
-                                    val hours = sec / 3600 // Получение часов
-                                    val minutes = (sec / 60) % 60 // Получение минут
-                                    val seconds = sec % 60 // Получение секунд
-
-                                    // Создаем LocalTime из частей
-                                    val time = LocalTime.of(hours, minutes, seconds)
-                                    Core.s_time.value = time.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-                                }
-
-                                override fun onFinish() {
-                                    start()
-                                }
-                            }.start()
+                            ctx?.startForegroundService(
+                                Core.mysvcIntent
+                            )
                         }
 
                         fun StopMainWork() {
-                            Core.timer?.cancel()
-                            Core.timer = null
-                            Core.wakeLock!!.release()
-                            Core.wakeLock = null
+                            ctx?.stopService(Core.mysvcIntent)
                         }
 
                         if(btnChecked.value)
