@@ -1,4 +1,4 @@
-package net.zenbooster.wrc.tile
+package net.zenbooster.ivt.tile
 
 import android.content.Context
 import androidx.compose.runtime.Composable

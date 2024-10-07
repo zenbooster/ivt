@@ -1,6 +1,5 @@
-package net.zenbooster.wrc.presentation
+package net.zenbooster.ivt.presentation
 
-import android.app.AlarmManager
 import android.app.Service
 import android.app.Notification
 import android.app.NotificationManager
@@ -12,19 +11,12 @@ import android.os.Build
 import android.widget.Toast
 import android.os.Vibrator
 import android.os.VibrationEffect;
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
-import java.lang.Math.sqrt
 import android.graphics.Color
 import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
-import android.content.Context
 import android.os.CountDownTimer
 import android.os.PowerManager
-import android.os.VibrationEffect.EFFECT_HEAVY_CLICK
-import net.zenbooster.wrc.R
+import net.zenbooster.ivt.R
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.round
@@ -72,7 +64,7 @@ class MyService : Service() {
         ) else Notification.Builder(this)
 
         return builder
-            .setContentTitle("WRC service")
+            .setContentTitle("IVT service")
             .setContentText("interval timer")
             .setContentIntent(pendingIntent)
             .setSmallIcon(R.mipmap.ic_launcher)
@@ -96,7 +88,7 @@ class MyService : Service() {
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         wakeLock = (getSystemService(POWER_SERVICE) as PowerManager).run {
-                newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WRC::MyWakelockTag").apply {
+                newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "IVT::MyWakelockTag").apply {
                     acquire()
                 }
             }

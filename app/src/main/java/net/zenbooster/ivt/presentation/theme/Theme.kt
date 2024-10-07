@@ -1,10 +1,10 @@
-package net.zenbooster.wrc.presentation.theme
+package net.zenbooster.ivt.presentation.theme
 
 import androidx.compose.runtime.Composable
 import androidx.wear.compose.material.MaterialTheme
 
 @Composable
-fun WrcTheme(
+fun IvtTheme(
     content: @Composable () -> Unit
 ) {
     /**

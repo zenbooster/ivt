@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "wrc"
+rootProject.name = "ivt"
 include(":app")

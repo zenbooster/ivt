@@ -1,4 +1,4 @@
-package net.zenbooster.wrc.complication
+package net.zenbooster.ivt.complication
 
 import androidx.wear.watchface.complications.data.ComplicationData
 import androidx.wear.watchface.complications.data.ComplicationType

@@ -4,19 +4,12 @@
  * changes to the libraries and their usages.
  */
 
-package net.zenbooster.wrc.presentation
+package net.zenbooster.ivt.presentation
 
-import android.app.ActivityManager
-import android.app.AlarmManager
-import android.app.PendingIntent
-import android.content.BroadcastReceiver
 import android.os.Bundle
 import android.content.Context
-import android.content.Context.POWER_SERVICE
-import android.content.Context.VIBRATOR_SERVICE
 import android.content.Intent
 import android.os.CountDownTimer
-import android.os.PowerManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -24,58 +17,33 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.Button
-import androidx.wear.compose.material.ButtonDefaults
-import androidx.wear.compose.material.Card
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.PickerGroup
 import androidx.wear.compose.material.PickerGroupItem
-import androidx.wear.compose.material.PickerState
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
 import androidx.wear.compose.material.rememberPickerGroupState
 import androidx.wear.compose.material.rememberPickerState
-import net.zenbooster.wrc.R
-import net.zenbooster.wrc.presentation.theme.WrcTheme
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
-import java.util.Date
-import kotlin.math.ceil
-import kotlin.math.round
-import kotlin.time.Duration
-import android.os.Vibrator
-import android.os.VibrationEffect;
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.unit.TextUnit
+import net.zenbooster.ivt.presentation.theme.IvtTheme
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat.getSystemService
 
 class Core {
     companion object {
@@ -125,7 +93,7 @@ fun WearApp(ctx: Context?) {
 
     Core.init(ctx)
 
-    WrcTheme {
+    IvtTheme {
         Box(
             modifier = Modifier
                 .fillMaxSize()

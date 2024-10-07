@@ -1,2 +1,2 @@
-# wrc
-reality check for Wear OS
+# ivt
+interval timer for Wear OS

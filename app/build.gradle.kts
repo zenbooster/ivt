@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "net.zenbooster.wrc"
+    namespace = "net.zenbooster.ivt"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "net.zenbooster.wrc"
+        applicationId = "net.zenbooster.ivt"
         minSdk = 30
         targetSdk = 34
         versionCode = 1
