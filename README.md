@@ -1,2 +1,2 @@
-# ivt
-interval timer for Wear OS
+# IVT
+Interval timer for Wear OS
