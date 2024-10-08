@@ -23,6 +23,7 @@ import kotlin.math.round
 
 class MyService : Service() {
     var wakeLock: PowerManager.WakeLock? = null
+    var timer: CountDownTimer? = null;
 
     private fun createNotification(): Notification {
         val notificationChannelId = "ENDLESS SERVICE CHANNEL"
@@ -37,10 +38,10 @@ class MyService : Service() {
                 NotificationManager.IMPORTANCE_HIGH
             ).let {
                 it.description = "Endless Service channel"
-                it.enableLights(true)
-                it.lightColor = Color.RED
-                it.enableVibration(true)
-                it.vibrationPattern = longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400)
+                //it.enableLights(true)
+                //it.lightColor = Color.RED
+                //it.enableVibration(true)
+                //it.vibrationPattern = longArrayOf(100, 200, 300, 400, 500, 400, 300, 200, 400)
                 it
             }
             notificationManager.createNotificationChannel(channel)
@@ -75,11 +76,11 @@ class MyService : Service() {
 
     override fun onDestroy()
     {
-        Core.timer?.cancel()
-        Core.timer = null
+        timer?.cancel()
+        timer = null
 
         wakeLock!!.release()
-        Toast.makeText(this, "service destroyed", Toast.LENGTH_SHORT).show()
+        //Toast.makeText(this, "service destroyed", Toast.LENGTH_SHORT).show()
     }
 
     override fun onCreate() {
@@ -93,7 +94,7 @@ class MyService : Service() {
                 }
             }
 
-        Core.timer = object : CountDownTimer(Core.totalSeconds * 1000, 1000) {
+        timer = object : CountDownTimer(Core.totalSeconds * 1000, 1000) {
             override fun onTick(millisRemaining: Long) {
                 val sec = round(millisRemaining / 1000.0).toInt()
 
@@ -147,7 +148,7 @@ class MyService : Service() {
             }
         }.start()
 
-        Toast.makeText(this, "service started", Toast.LENGTH_SHORT).show()
+        //Toast.makeText(this, "service started", Toast.LENGTH_SHORT).show()
         // If we get killed, after returning from here, restart
         return START_NOT_STICKY
     }

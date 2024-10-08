@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,9 +51,6 @@ import androidx.wear.compose.material.PickerState
 class Core {
     companion object {
         var sharedPref : SharedPreferences? = null
-        var btnEnabled = mutableStateOf(false)
-        var btnChecked = mutableStateOf(false)
-        var timer: CountDownTimer? = null;
         var s_time = mutableStateOf("00:00:00")
         val def_timerColor = Color.Green
         var VibrationLevel = mutableStateOf(255f)
@@ -127,8 +125,8 @@ fun WearApp(ctx: Context?) {
 
             val pickerGroupState = rememberPickerGroupState()
             val btcap = listOf("▶", "❚❚")
-            val btnEnabled : MutableState<Boolean> = Core.btnEnabled
-            val btnChecked : MutableState<Boolean> = Core.btnChecked
+            val btnEnabled = remember { mutableStateOf(false) }
+            val btnChecked = remember { mutableStateOf(false) }
             val timerColor : MutableState<Color> = Core.timerColor
 
             Column(
