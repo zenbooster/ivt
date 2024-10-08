@@ -9,6 +9,7 @@ package net.zenbooster.ivt.presentation
 import android.os.Bundle
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.CountDownTimer
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -44,9 +45,11 @@ import androidx.wear.compose.material.rememberPickerGroupState
 import androidx.wear.compose.material.rememberPickerState
 import net.zenbooster.ivt.presentation.theme.IvtTheme
 import androidx.compose.ui.unit.sp
+import androidx.wear.compose.material.PickerState
 
 class Core {
     companion object {
+        var sharedPref : SharedPreferences? = null
         var btnEnabled = mutableStateOf(false)
         var btnChecked = mutableStateOf(false)
         var timer: CountDownTimer? = null;
@@ -56,12 +59,34 @@ class Core {
         var VibrationDuration = mutableStateOf(750f)
         var timerColor = mutableStateOf(Core.def_timerColor)
 
+        var pickerStateH : PickerState? = null
+        var pickerStateM : PickerState? = null
+        var pickerStateS : PickerState? = null
+
         var totalSeconds:Long = 0;
         var mysvcIntent: Intent = Intent()
 
         fun init(ctx : Context?) {
             if(ctx != null) {
+                sharedPref = ctx.getSharedPreferences("myPref", Context.MODE_PRIVATE)
+                pickerStateH = PickerState(initialNumberOfOptions = 24, initiallySelectedOption = sharedPref!!.getInt("pkrH", 0))
+                pickerStateM = PickerState(initialNumberOfOptions = 60, initiallySelectedOption = sharedPref!!.getInt("pkrM", 0))
+                pickerStateS = PickerState(initialNumberOfOptions = 60, initiallySelectedOption = sharedPref!!.getInt("pkrS", 15))
+
                 mysvcIntent.setClass(ctx, MyService::class.java)
+            }
+        }
+
+        fun save() {
+            if (sharedPref != null) {
+                with(sharedPref!!.edit())
+                {
+                    putInt("pkrH", pickerStateH!!.selectedOption)
+                    putInt("pkrM", pickerStateM!!.selectedOption)
+                    putInt("pkrS", pickerStateS!!.selectedOption)
+
+                    apply()
+                }
             }
         }
     }
@@ -81,10 +106,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onPause() {
+        Core.save()
         super.onPause()
-    }
-    override fun onDestroy() {
-        super.onDestroy()
     }
 }
 
@@ -103,10 +126,6 @@ fun WearApp(ctx: Context?) {
             TimeText()
 
             val pickerGroupState = rememberPickerGroupState()
-            val pickerStateH = rememberPickerState(initialNumberOfOptions = 24)
-            val pickerStateM = rememberPickerState(initialNumberOfOptions = 60)
-            val pickerStateS = rememberPickerState(initialNumberOfOptions = 60)
-
             val btcap = listOf("▶", "❚❚")
             val btnEnabled : MutableState<Boolean> = Core.btnEnabled
             val btnChecked : MutableState<Boolean> = Core.btnChecked
@@ -130,17 +149,17 @@ fun WearApp(ctx: Context?) {
 
                         PickerGroup(
                             PickerGroupItem(
-                                pickerState = pickerStateH,
+                                pickerState = Core.pickerStateH!!,
                                 option = { optionIndex, _ -> Text(text = "%02d".format(optionIndex)) },
                                 modifier = Modifier.size(40.dp, 100.dp)
                             ),
                             PickerGroupItem(
-                                pickerState = pickerStateM,
+                                pickerState = Core.pickerStateM!!,
                                 option = { optionIndex, _ -> Text(text = "%02d".format(optionIndex)) },
                                 modifier = Modifier.size(40.dp, 100.dp)
                             ),
                             PickerGroupItem(
-                                pickerState = pickerStateS,
+                                pickerState = Core.pickerStateS!!,
                                 option = { optionIndex, _ -> Text(text = "%02d".format(optionIndex)) },
                                 modifier = Modifier.size(40.dp, 100.dp)
                             ),
@@ -149,13 +168,13 @@ fun WearApp(ctx: Context?) {
                         )
 
                         LaunchedEffect(
-                            pickerStateH.selectedOption,
-                            pickerStateM.selectedOption,
-                            pickerStateS.selectedOption
+                            Core.pickerStateH!!.selectedOption,
+                            Core.pickerStateM!!.selectedOption,
+                            Core.pickerStateS!!.selectedOption
                         ) {
-                            btnEnabled.value = pickerStateH.selectedOption > 0 ||
-                                    pickerStateM.selectedOption > 0 ||
-                                    pickerStateS.selectedOption > 0
+                            btnEnabled.value = Core.pickerStateH!!.selectedOption > 0 ||
+                                    Core.pickerStateM!!.selectedOption > 0 ||
+                                    Core.pickerStateS!!.selectedOption > 0
 
                         }
                     } else {
@@ -172,9 +191,9 @@ fun WearApp(ctx: Context?) {
                     enabled = btnEnabled.value,
                     onClick = {
                         fun StartMainWork() {
-                            Core.totalSeconds = pickerStateS.selectedOption +
-                                    pickerStateM.selectedOption * 60L +
-                                    pickerStateH.selectedOption * 3600L;
+                            Core.totalSeconds = Core.pickerStateS!!.selectedOption +
+                                    Core.pickerStateM!!.selectedOption * 60L +
+                                    Core.pickerStateH!!.selectedOption * 3600L;
 
                             ctx?.startForegroundService(
                                 Core.mysvcIntent
